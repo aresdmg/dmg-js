@@ -15,5 +15,5 @@ export async function ConnectDB() {
     })
 
     const db = drizzle(pool)
-    return { db, pool }
+    return db
 }
