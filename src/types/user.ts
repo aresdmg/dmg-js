@@ -1,4 +1,12 @@
-import z, { email } from "zod";
+import { Jwt } from "jsonwebtoken";
+import z from "zod";
+
+export interface JwtUserPayload extends Jwt {
+    id: string,
+    name: string,
+    email: string,
+    role: "USER" | "ADMIN"
+}
 
 export const registerSchema = z.object({
     fullName: z.string().min(1, { error: "Min character limit is 100" }).max(100, { error: "Max character limit is 100" }).nonempty(),

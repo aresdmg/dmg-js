@@ -1,7 +1,8 @@
+import { JwtUserPayload } from "@/types/user";
 import jwt from "jsonwebtoken";
 import crypto from "node:crypto";
 
-export const generateAccessToken = (user: { id: string, name: string, email: string, role: "USER" | "ADMIN" }) => {
+export const generateAccessToken = (user: JwtUserPayload) => {
     const jwtSecret = process.env.JWT_SECRET
     if (!jwtSecret) {
         throw new Error("JWT_SECRET not set")
