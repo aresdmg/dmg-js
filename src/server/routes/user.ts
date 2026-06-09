@@ -1,8 +1,8 @@
-import { loginSchema, registerSchema } from "@/types/user";
-import { publicProcedure, router } from "../trpc";
+import { JwtUserPayload, loginSchema, registerSchema } from "@/types/user";
+import { protectedProcedure, publicProcedure, router } from "../trpc";
 import { TRPCError } from "@trpc/server";
 import { tokensTable, usersTable } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import { generateAccessToken, generateRefreshToken, hashRefreshToken } from "@/lib/token";
 import { cookies } from "next/headers";
@@ -81,7 +81,7 @@ export const userRoute = router({
 
                 const isValidPassword = await bcrypt.compare(password, user.password as string)
                 if (!isValidPassword) {
-                    throw new TRPCError({ code: "BAD_REQUEST", message: "INvalid credentials" })
+                    throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid credentials" })
                 }
 
                 const jwtPayload = {
@@ -89,7 +89,7 @@ export const userRoute = router({
                     name: user.fullName,
                     email: user.email,
                     role: user.role
-                }
+                } as JwtUserPayload
 
                 const accessToken = generateAccessToken(jwtPayload)
                 const refreshToken = generateRefreshToken()
@@ -110,4 +110,36 @@ export const userRoute = router({
                 return { message: "User authenticated" }
             }
         ),
+
+    logout: protectedProcedure
+        .query(
+            async ({ ctx }) => {
+                const user = ctx.user
+                const refreshToken = ctx.req.cookies.get("dmg_refresh_token")?.value
+
+                if (!user || !refreshToken) {
+                    throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized request" })
+                }
+
+                const hashedRefreshToken = hashRefreshToken(refreshToken)
+                await ctx.db
+                    .update(tokensTable)
+                    .set({
+                        revoked: true
+                    })
+                    .where(
+                        and(
+                            eq(tokensTable.userId, user.id),
+                            eq(tokensTable.refreshToken, hashedRefreshToken),
+                            eq(tokensTable.revoked, false)
+                        )
+                    )
+
+                const cs = await cookies()
+                cs.delete("dmg_access_token")
+                cs.delete("dmg_refresh_token")
+
+                return { message: "User logged out" }
+            }
+        )
 })

@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import Provider from "@/components/provider";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistHeading = Geist({ subsets: ['latin'], variable: '--font-heading' });
 
@@ -29,12 +30,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-      <html lang="en" className={cn("h-full", "antialiased", geistSans.variable, geistMono.variable, "font-sans", inter.variable, geistHeading.variable)}>
-          <body className="min-h-full flex flex-col">
-              <Provider>
-                  {children}
-              </Provider>
-          </body>
+    <html lang="en" className={cn("h-full", "antialiased", geistSans.variable, geistMono.variable, "font-sans", inter.variable, geistHeading.variable)}>
+      <body className="min-h-full flex flex-col">
+        <Provider>
+          {children}
+          <Toaster richColors position="top-right" theme="light" />
+        </Provider>
+      </body>
     </html>
   );
 }

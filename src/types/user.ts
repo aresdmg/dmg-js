@@ -9,9 +9,9 @@ export interface JwtUserPayload extends Jwt {
 }
 
 export const registerSchema = z.object({
-    fullName: z.string().min(1, { error: "Min character limit is 100" }).max(100, { error: "Max character limit is 100" }).nonempty(),
+    fullName: z.string().min(1, { error: "Min character limit is 1" }).max(100, { error: "Max character limit is 100" }).nonempty(),
     email: z.email().nonempty(),
-    password: z.string()
+    password: z.string().min(6, "Password must be 6 character long")
 })
 
 export const loginSchema = z.object({
