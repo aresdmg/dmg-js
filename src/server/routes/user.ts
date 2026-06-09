@@ -182,5 +182,38 @@ export const userRoute = router({
 
                 return { success: true, user: formattedUser }
             }
+        ),
+
+    me: protectedProcedure
+        .query(
+            async ({ ctx }) => {
+                if (!ctx.user) {
+                    throw new TRPCError({ code: "UNAUTHORIZED" })
+                }
+
+                const [user] = await ctx.db
+                    .select({
+                        id: usersTable.id,
+                        name: usersTable.fullName,
+                        email: usersTable.email,
+                        role: usersTable.role,
+                        avatar: usersTable.avatar,
+                        isNew: usersTable.isNew
+                    })
+                    .from(usersTable)
+                    .where(
+                        and(
+                            eq(usersTable.id, ctx.user.id),
+                            eq(usersTable.email, ctx.user.email)
+                        )
+                    )
+                    .limit(1)
+
+                if (!user) {
+                    throw new TRPCError({ code: "NOT_FOUND", message: "User not found" })
+                }
+
+                return user
+            }
         )
 })
