@@ -5,7 +5,7 @@ export const usersTable = pgTable("users", {
     fullName: varchar("full_name", { length: 255 }).notNull(),
     email: varchar("email", { length: 255 }).notNull().unique(),
     password: text("password"),
-    avatar: varchar("avatar", { length: 255 }).notNull().default("https://res.cloudinary.com/desamhhkj/image/upload/v1774217400/avatar0_jntvgv.jpg"),
+    avatar: text("avatar").notNull().default("https://res.cloudinary.com/desamhhkj/image/upload/v1774217400/avatar0_jntvgv.jpg"),
     isNew: boolean("is_new").default(true),
     role: varchar("role", { length: 20 }).$type<"USER" | "ADMIN">().default("USER").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).defaultNow().notNull(),

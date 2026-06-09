@@ -19,5 +19,10 @@ export const loginSchema = z.object({
     password: z.string()
 })
 
+export const updateAvatarSchema = z.object({
+    url: z.string().nonempty()
+})
+
 export type Register = z.infer<typeof registerSchema>
 export type Login = z.infer<typeof loginSchema>
+export type UpdateAvatar = z.infer<typeof updateAvatarSchema>

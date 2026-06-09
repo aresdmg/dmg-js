@@ -24,10 +24,15 @@ export default function SignIn() {
     })
 
     const mutation = trpc.user.login.useMutation({
-        onSuccess() {
-            toast.success("Welcome")
-            router.push('/home')
-            reset
+        onSuccess(data) {
+            if (data.data.isNew) {
+                router.push('/update-avatar')
+                return
+            } else {
+                toast.success("Welcome")
+                router.push('/home')
+            }
+            reset()
         },
         onError(e) {
             const errMsg = e.message || "User login failed";

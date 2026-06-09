@@ -1,4 +1,4 @@
-import { JwtUserPayload, loginSchema, registerSchema } from "@/types/user";
+import { JwtUserPayload, loginSchema, registerSchema, updateAvatarSchema } from "@/types/user";
 import { protectedProcedure, publicProcedure, router } from "../trpc";
 import { TRPCError } from "@trpc/server";
 import { tokensTable, usersTable } from "@/db/schema";
@@ -64,9 +64,10 @@ export const userRoute = router({
                     .select({
                         id: usersTable.id,
                         fullName: usersTable.fullName,
-                        email: usersTable.fullName,
+                        email: usersTable.email,
                         password: usersTable.password,
                         role: usersTable.role,
+                        isNew: usersTable.isNew,
                         avatar: usersTable.avatar
                     })
                     .from(usersTable)
@@ -104,15 +105,15 @@ export const userRoute = router({
                 })
 
                 const cs = await cookies()
-                cs.set("dmg_access_token", accessToken, { secure: true, maxAge: 60 * 15, sameSite: "lax" })
-                cs.set("dmg_refresh_token", refreshToken, { secure: true, maxAge: 60 * 60 * 24 * 30, sameSite: "lax" })
+                cs.set("dmg_access_token", accessToken, { maxAge: 60 * 15, sameSite: "lax" })
+                cs.set("dmg_refresh_token", refreshToken, { maxAge: 60 * 60 * 24 * 30, sameSite: "lax" })
 
-                return { message: "User authenticated" }
+                return { success: true, data: { isNew: user.isNew } }
             }
         ),
 
     logout: protectedProcedure
-        .query(
+        .mutation(
             async ({ ctx }) => {
                 const user = ctx.user
                 const refreshToken = ctx.req.cookies.get("dmg_refresh_token")?.value
@@ -139,7 +140,47 @@ export const userRoute = router({
                 cs.delete("dmg_access_token")
                 cs.delete("dmg_refresh_token")
 
-                return { message: "User logged out" }
+                return { success: true }
+            }
+        ),
+
+    updateAvatar: protectedProcedure
+        .input(updateAvatarSchema)
+        .mutation(
+            async ({ ctx, input }) => {
+                if (!ctx.user) {
+                    throw new TRPCError({ code: "UNAUTHORIZED" })
+                }
+
+                if (!input.url) {
+                    throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to save avatar" })
+                }
+
+                const [user] = await ctx.db
+                    .update(usersTable)
+                    .set({
+                        avatar: input.url,
+                        isNew: false
+                    })
+                    .where(
+                        and(
+                            eq(usersTable.id, ctx.user.id),
+                            eq(usersTable.email, ctx.user.email)
+                        )
+                    )
+                    .returning()
+
+                if (!user) {
+                    throw new TRPCError({ code: "NOT_FOUND", message: "User not found" })
+                }
+
+                const formattedUser = {
+                    id: user.id,
+                    email: user.email,
+                    avatar: user.avatar
+                }
+
+                return { success: true, user: formattedUser }
             }
         )
 })

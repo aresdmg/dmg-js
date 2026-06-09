@@ -21,6 +21,7 @@ export const config = {
     matcher: [
         '/',
         '/home',
+        '/update-avatar',
         '/auth/:path*',
     ],
 }
