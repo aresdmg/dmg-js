@@ -21,3 +21,27 @@ export const tokensTable = pgTable("tokens", {
     expiredAt: timestamp("expired_at", { withTimezone: true, mode: "date" }).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).defaultNow().notNull()
 })
+
+export const requestsTable = pgTable("requests", {
+    id: uuid("id").defaultRandom().primaryKey(),
+    from: uuid("id").references(() => usersTable.id, { onDelete: "cascade" }),
+    to: uuid("id").references(() => usersTable.id, { onDelete: "cascade" }),
+    accepted: boolean("is_accepted").default(false).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).defaultNow().notNull(),
+})
+
+export const channelsTable = pgTable("channels", {
+    id: uuid("id").defaultRandom().primaryKey(),
+    name: varchar("name", { length: 255 }).notNull(),
+    isGroup: boolean("is_group").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }).defaultNow().notNull(),
+    deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "date" })
+})
+
+export const membersTable = pgTable("members", {
+    id: uuid("id").defaultRandom().primaryKey(),
+    channelId: uuid("channel_id").references(() => channelsTable.id, { onDelete: "cascade" }),
+    member: uuid("member").references(() => usersTable.id, { onDelete: "cascade" }),
+    role: varchar("role", { length: 30 }).$type<"MEMBER" | "ADMIN">().default("MEMBER").notNull(),
+})

@@ -160,7 +160,8 @@ export const userRoute = router({
                     .update(usersTable)
                     .set({
                         avatar: input.url,
-                        isNew: false
+                        isNew: false,
+                        updatedAt: new Date(Date.now())
                     })
                     .where(
                         and(
