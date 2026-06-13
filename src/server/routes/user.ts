@@ -1,8 +1,8 @@
-import { JwtUserPayload, loginSchema, registerSchema, updateAvatarSchema } from "@/types/user";
+import { findSchema, JwtUserPayload, loginSchema, registerSchema, updateAvatarSchema } from "@/types/user";
 import { protectedProcedure, publicProcedure, router } from "../trpc";
 import { TRPCError } from "@trpc/server";
 import { tokensTable, usersTable } from "@/db/schema";
-import { and, eq } from "drizzle-orm";
+import { and, eq, ilike, or } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import { generateAccessToken, generateRefreshToken, hashRefreshToken } from "@/lib/token";
 import { cookies } from "next/headers";
@@ -215,6 +215,45 @@ export const userRoute = router({
                 }
 
                 return user
+            }
+        ),
+
+    find: protectedProcedure
+        .input(findSchema)
+        .query(
+            async ({ ctx, input }) => {
+                const query = input.query.trim()
+                if (!query) {
+                    throw new TRPCError({ code: "BAD_REQUEST", message: "Query not found" })
+                }
+
+                if (query.length < 2) {
+                    return [];
+                }
+
+                const users = await ctx.db
+                    .select(
+                        {
+                            id: usersTable.id,
+                            name: usersTable.fullName,
+                            avatar: usersTable.avatar
+                        }
+                    )
+                    .from(usersTable)
+                    .where(
+                        or(
+                            ilike(usersTable.email, `%${query}%`),
+                            ilike(usersTable.fullName, `%${query}%`)
+                        )
+                    )
+                    .limit(10)
+                    .orderBy(usersTable.fullName)
+
+                if (!users.length) {
+                    return [];
+                }
+
+                return users
             }
         )
 })

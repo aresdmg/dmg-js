@@ -6,7 +6,6 @@ import { Loader2, Upload } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useRef, useState } from "react";
 import { toast } from "sonner";
-import axios, { isAxiosError } from "axios";
 
 export default function UpdateAvatar() {
     const router = useRouter()
@@ -49,7 +48,12 @@ export default function UpdateAvatar() {
             const formdata = new FormData()
             formdata.append("avatar", selectedFile)
 
-            const { data } = await axios.post("/api/upload/avatar", formdata);
+            const res = await fetch('/api/upload/avatar', {
+                method: "POST",
+                body: formdata
+            })
+
+            const data = await res.json()
 
             if (!data?.url) {
                 toast.error("Failed to upload image")
@@ -58,10 +62,6 @@ export default function UpdateAvatar() {
 
             await saveImage.mutateAsync({ url: data?.url })
         } catch (error) {
-            if (isAxiosError(error)) {
-                console.log(error.message)
-                console.log(error.name)
-            }
             console.log(error)
         } finally {
             setLoading(false)
@@ -99,7 +99,15 @@ export default function UpdateAvatar() {
                     </Button>
                     <Button className="w-1/2 h-10" disabled={loading} onClick={() => handleFileUpload()} >
                         {
-                            loading ? <span className="animate-spin" > <Loader2 /> </span> : `Upload`
+                            loading ? (
+                                <>
+                                    <span className="animate-spin" > <Loader2 />  </span>
+                                    <p>
+                                        Submitting
+                                    </p>
+                                </>
+                            )
+                                : `Upload`
                         }
                     </Button>
                 </div>

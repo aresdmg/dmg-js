@@ -23,6 +23,11 @@ export const updateAvatarSchema = z.object({
     url: z.string().nonempty()
 })
 
+export const findSchema = z.object({
+    query: z.string().nonempty()
+})
+
 export type Register = z.infer<typeof registerSchema>
 export type Login = z.infer<typeof loginSchema>
 export type UpdateAvatar = z.infer<typeof updateAvatarSchema>
+export type Find = z.infer<typeof findSchema>
