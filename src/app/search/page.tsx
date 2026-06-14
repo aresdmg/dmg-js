@@ -5,14 +5,33 @@ import { trpc } from "@/components/provider";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ChevronLeft, UserPlus } from "lucide-react";
+import { ChevronLeft, Loader2 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
+import { toast } from "sonner";
 
 export default function Search() {
     const searchParams = useSearchParams();
     const q = searchParams.get('q');
 
     const search = trpc.user.find.useQuery({ query: q! })
+    const sendReq = trpc.request.create.useMutation({
+        onSuccess: () => {
+            toast.success("Request sent")
+        },
+        onError: (err) => {
+            if (err.message == "Request exists") {
+                toast.info("Request exists")
+                return
+            }
+
+            const errMsg = err.message || "Failed to send request"
+            toast.error(errMsg)
+        }
+    })
+
+    const handleSendRequest = async (toId: string) => {
+        await sendReq.mutateAsync({ to: toId })
+    }
 
     return (
         <>
@@ -37,15 +56,18 @@ export default function Search() {
                                 <div className="w-full h-16 bg-zinc-300/20 border rounded-lg px-5 flex" key={e.id} >
                                     <div className="w-1/2 h-full flex justify-start items-center space-x-3">
                                         <Avatar className="size-10" >
-                                            <AvatarImage src={e.avatar} className="size-10"  />
+                                            <AvatarImage src={e.avatar} className="size-10" />
                                         </Avatar>
                                         <p className="text-lg" >
                                             {e.name}
                                         </p>
                                     </div>
                                     <div className="w-1/2 h-full flex justify-end items-center" >
-                                        <Button size={"icon"} className="rounded-sm" >
-                                            <UserPlus />
+                                        <Button className="bg-emerald-600 rounded-sm" disabled={sendReq.isPending} onClick={() => handleSendRequest(e.id)} >
+                                            {
+                                                sendReq.isPending ? <span className="animate-spin"><Loader2 /></span> : null
+                                            }
+                                            Send request
                                         </Button>
                                     </div>
                                 </div>

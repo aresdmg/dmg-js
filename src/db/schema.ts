@@ -24,8 +24,8 @@ export const tokensTable = pgTable("tokens", {
 
 export const requestsTable = pgTable("requests", {
     id: uuid("id").defaultRandom().primaryKey(),
-    from: uuid("id").references(() => usersTable.id, { onDelete: "cascade" }),
-    to: uuid("id").references(() => usersTable.id, { onDelete: "cascade" }),
+    fromUser: uuid("from_user").references(() => usersTable.id, { onDelete: "cascade" }),
+    toUser: uuid("to_user").references(() => usersTable.id, { onDelete: "cascade" }),
     accepted: boolean("is_accepted").default(false).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).defaultNow().notNull(),
 })

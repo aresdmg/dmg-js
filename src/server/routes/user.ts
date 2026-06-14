@@ -7,7 +7,7 @@ import bcrypt from "bcrypt";
 import { generateAccessToken, generateRefreshToken, hashRefreshToken } from "@/lib/token";
 import { cookies } from "next/headers";
 
-export const userRoute = router({
+export const userRouter = router({
     register: publicProcedure
         .input(registerSchema)
         .mutation(

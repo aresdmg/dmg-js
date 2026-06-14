@@ -23,5 +23,6 @@ export const config = {
         '/home',
         '/update-avatar',
         '/auth/:path*',
+        '/search'
     ],
 }
